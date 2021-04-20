@@ -1,1 +1,74 @@
-See https://libbitcoin.org
+[  {
+		"//": "My_data_provider US data encoder: Encodes the data from the data provider",
+		"job": "GL.Base.My_data_provider_encoder.Daily.US",
+		"gen_type": "DailyGen",
+		"available_time": "06:40",
+		"time_zone": "NYC",
+		"start_date": "2002-01-02",
+		"cmd_line": "{tgtdir}/path/to/myfile/encoders/my_data_provider_encoder.py --region US",
+		"depends": [
+			"US.Base.ReferenceData"
+		]
+	},
+	
+    {     
+	    "//": "My_data_provider US postcheck: postchecks the data after it's encoded",
+		"job": "GL.Base.My_data_provider.PostCheck.US",
+		"gen_type": "DailyGen",
+		"start_date": "2002-01-02",
+		"cmd_line": "{tgtdir}/path/to/myfile/checkers/my_data_provider_postcheck.py --region US",
+		"depends": [
+			"GL.Base.My_data_provider_encoder.Daily.US",
+			"US.Deriv.Uni.U1"
+		]
+	},
+
+	{
+		"//": "My_data_provider X: creates features from My_data_provider dataset",
+		"gen_type": "DailyGen",
+		"job": "US.Alpha.My_data_provider.V0.X",
+		"cmd_line": "{tgtdir}/path/to/myfile/features/create_features.py --region US",
+		"startdate": "2006-01-02",
+		"estmem": 8192,
+		"estcpu": 10,
+		"depends": [
+			"US.Deriv.LFPV",
+			"US.Base.Barra.USE4SIdMap",
+			"US.Deriv.Uni.U1",
+			"GL.Base.My_data_provider.PostCheck.US"
+		]
+		"lag_depends": [
+			"US.SomeJobOnWhichWeLagDepend"
+		]
+	},
+	
+	{
+		"//": "My_data_provider W: creates rolling window weekly linear coefficients",
+		"gen_type": "DailyGen",
+		"job": "US.Alpha.My_data_provider.V0.W",
+		"cmd_line": "{tgtdir}/path/to/myfile/utils/linear_model.py --time eFirstMktOpen-00:24:32 --region US --mode fit --xsrcs My_data_provider_US_V0_X --wsrc My_data_provider_US_V0_W --horizon 5 --window 768 --freq monthly",
+		"startdate": "2006-03-01",
+		"estmem": 8192,
+		"lag_depends": [
+			"US.Alpha.My_data_provider.V0.X"
+		],
+		"depends": [
+			"US.Deriv.CTargets"
+		]
+	},
+
+	{
+		"//": "My_data_provider YH: creates prediction using weekly coefficients",
+		"gen_type": "DailyGen",
+		"job": "US.Alpha.My_data_provider.V0.YH",
+		"startdate": "2006-04-01",
+		"cmd_line": " {tgtdir}/path/to/myfile/utils/linear_model.py --time eFirstMktOpen-00:24:00 --region US --mode predict --wsrc My_data_provider_US_V0_W --yhsrc My_data_provider_US_V0_YH",
+		"depends": [
+			"US.Alpha.My_data_provider.V0.X",
+			"US.Alpha.My_data_provider.V0.W",
+			"US.Base.Barra.USE4SIdMap"
+		]
+	},
+	
+
+]
